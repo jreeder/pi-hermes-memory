@@ -230,6 +230,35 @@ describe("registerConsolidateCommand", () => {
     assert.ok(projectReloaded, "project store should reload after consolidation");
     assert.ok(notification.includes("project:demo-project: ✅ consolidated"), "notification should include project result");
   });
+
+  it("does not throw if the command ctx becomes stale before the final summary notify", async () => {
+    let handler: any;
+
+    const pi = {
+      on: () => {},
+      exec: async (...args: any[]) => {
+        execCalls.push(args);
+        return { code: 0, stdout: "Done", stderr: "" };
+      },
+      registerTool: () => {},
+      registerCommand: (_name: string, command: any) => {
+        handler = command.handler;
+      },
+    } as any;
+
+    registerConsolidateCommand(pi, mockStore, 60000);
+
+    await assert.doesNotReject(async () => {
+      await handler({}, {
+        signal: undefined,
+        ui: {
+          notify: () => {
+            throw new Error("This extension ctx is stale after session replacement or reload.");
+          },
+        },
+      });
+    });
+  });
 });
 
 describe("MemoryStore auto-consolidation integration", () => {

@@ -122,10 +122,16 @@ export function registerConsolidateCommand(
         }
       }
 
-      ctx.ui.notify(
-        `\n  🔄 Memory Consolidation\n  ${"─".repeat(30)}\n${results.map((r) => `  ${r}`).join("\n")}`,
-        "info",
-      );
+      const summary = `\n  🔄 Memory Consolidation\n  ${"─".repeat(30)}\n${results.map((r) => `  ${r}`).join("\n")}`;
+
+      try {
+        ctx.ui.notify(summary, "info");
+      } catch {
+        // Child consolidation can indirectly trigger a runtime reload/session
+        // replacement. If that happens, the original command ctx is stale by
+        // the time we reach the final summary, so the command should exit
+        // quietly instead of surfacing a stale-ctx error.
+      }
     },
   });
 }
