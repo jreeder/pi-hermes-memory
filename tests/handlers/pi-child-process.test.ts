@@ -1,26 +1,49 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { buildChildPiPromptArgs, execChildPrompt } from "../../src/handlers/pi-child-process.js";
+import { buildChildPiPromptArgs, execChildPrompt, inheritedExtensionArgs } from "../../src/handlers/pi-child-process.js";
+
+describe("inheritedExtensionArgs", () => {
+  it("captures explicit -e and --extension parent args", () => {
+    assert.deepStrictEqual(
+      inheritedExtensionArgs(["-e", "src/index.ts", "--extension", "/tmp/other.ts"]),
+      ["-e", "src/index.ts", "--extension", "/tmp/other.ts"],
+    );
+  });
+
+  it("captures --extension=... parent args", () => {
+    assert.deepStrictEqual(
+      inheritedExtensionArgs(["--extension=src/index.ts"]),
+      ["--extension=src/index.ts"],
+    );
+  });
+});
 
 describe("buildChildPiPromptArgs", () => {
   it("keeps the current child pi behavior when no overrides are configured", () => {
     assert.deepStrictEqual(
-      buildChildPiPromptArgs("hello", {}),
+      buildChildPiPromptArgs("hello", {}, []),
       ["-p", "--no-session", "hello"],
     );
   });
 
   it("adds a model override and defaults thinking to off", () => {
     assert.deepStrictEqual(
-      buildChildPiPromptArgs("hello", { llmModelOverride: "openrouter/deepseek/deepseek-v4-flash" }),
+      buildChildPiPromptArgs("hello", { llmModelOverride: "openrouter/deepseek/deepseek-v4-flash" }, []),
       ["-p", "--no-session", "--model", "openrouter/deepseek/deepseek-v4-flash", "--thinking", "off", "hello"],
     );
   });
 
   it("allows thinking overrides without a model override", () => {
     assert.deepStrictEqual(
-      buildChildPiPromptArgs("hello", { llmThinkingOverride: "low" }),
+      buildChildPiPromptArgs("hello", { llmThinkingOverride: "low" }, []),
       ["-p", "--no-session", "--thinking", "low", "hello"],
+    );
+  });
+
+  it("inherits explicit extension args from the parent pi process", () => {
+    assert.deepStrictEqual(
+      buildChildPiPromptArgs("hello", {}, ["-e", "src/index.ts"]),
+      ["-p", "--no-session", "-e", "src/index.ts", "hello"],
     );
   });
 });

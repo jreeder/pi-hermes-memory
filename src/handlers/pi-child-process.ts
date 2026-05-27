@@ -31,13 +31,37 @@ export function hasChildLlmOverrides(config: ChildLlmConfig): boolean {
   return normalizedModelOverride(config) !== undefined || effectiveThinkingOverride(config) !== undefined;
 }
 
-export function buildChildPiPromptArgs(prompt: string, config: ChildLlmConfig): string[] {
+export function inheritedExtensionArgs(argv: string[] = process.argv.slice(2)): string[] {
+  const args: string[] = [];
+
+  for (let i = 0; i < argv.length; i++) {
+    const current = argv[i];
+    if (current === "-e" || current === "--extension") {
+      const next = argv[i + 1];
+      if (typeof next === "string" && next.length > 0) {
+        args.push(current, next);
+        i++;
+      }
+      continue;
+    }
+
+    if (current.startsWith("--extension=")) {
+      args.push(current);
+    }
+  }
+
+  return args;
+}
+
+export function buildChildPiPromptArgs(prompt: string, config: ChildLlmConfig, argv: string[] = process.argv.slice(2)): string[] {
   const args = ["-p", "--no-session"];
   const model = normalizedModelOverride(config);
   const thinking = effectiveThinkingOverride(config);
+  const inheritedExtensions = inheritedExtensionArgs(argv);
 
   if (model) args.push("--model", model);
   if (thinking) args.push("--thinking", thinking);
+  args.push(...inheritedExtensions);
   args.push(prompt);
 
   return args;
