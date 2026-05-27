@@ -11,7 +11,6 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { MemoryStore } from "../store/memory-store.js";
 import { CONSOLIDATION_PROMPT, ENTRY_DELIMITER } from "../constants.js";
 import type { ConsolidationResult } from "../types.js";
-import { buildBackgroundPiArgs } from "./exec-helpers.js";
 
 type MemoryTarget = "memory" | "user" | "failure";
 type ToolMemoryTarget = MemoryTarget | "project";
@@ -34,7 +33,6 @@ export async function triggerConsolidation(
   signal?: AbortSignal,
   timeoutMs: number = 60000,
   toolTarget: ToolMemoryTarget = target,
-  model?: string,
 ): Promise<ConsolidationResult> {
   const entries = entriesForTarget(store, target);
   const currentContent = entries.join(ENTRY_DELIMITER);
@@ -49,7 +47,7 @@ export async function triggerConsolidation(
   ].join("\n");
 
   try {
-    const result = await pi.exec("pi", buildBackgroundPiArgs(prompt, model), {
+    const result = await pi.exec("pi", ["-p", "--no-session", prompt], {
       signal,
       timeout: timeoutMs,
     });
@@ -78,7 +76,6 @@ export function registerConsolidateCommand(
   timeoutMs: number = 60000,
   projectStore: MemoryStore | null = null,
   projectName?: string | null,
-  model?: string,
 ): void {
   pi.registerCommand("memory-consolidate", {
     description: "Manually trigger memory consolidation to free up space",
@@ -111,7 +108,7 @@ export function registerConsolidateCommand(
           continue;
         }
 
-        const result = await triggerConsolidation(pi, item.store, item.target, ctx.signal, timeoutMs, item.toolTarget, model);
+        const result = await triggerConsolidation(pi, item.store, item.target, ctx.signal, timeoutMs, item.toolTarget);
 
         if (result.consolidated) {
           await item.store.loadFromDisk();

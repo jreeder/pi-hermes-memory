@@ -179,15 +179,15 @@ export default function (pi: ExtensionAPI) {
 
   // ── 7. Setup auto-consolidation (inject consolidator into stores) ──
   store.setConsolidator(async (target, signal) => {
-    return triggerConsolidation(pi, store, target, signal, config.consolidationTimeoutMs, target, config.backgroundModel);
+    return triggerConsolidation(pi, store, target, signal, config.consolidationTimeoutMs);
   });
   if (projectStore) {
     projectStore.setConsolidator(async (target, signal) => {
       const toolTarget = target === "memory" ? "project" : target;
-      return triggerConsolidation(pi, projectStore, target, signal, config.consolidationTimeoutMs, toolTarget, config.backgroundModel);
+      return triggerConsolidation(pi, projectStore, target, signal, config.consolidationTimeoutMs, toolTarget);
     });
   }
-  registerConsolidateCommand(pi, store, config.consolidationTimeoutMs, projectStore, projectName, config.backgroundModel);
+  registerConsolidateCommand(pi, store, config.consolidationTimeoutMs, projectStore, projectName);
 
   // ── 8. Setup correction detection ──
   setupCorrectionDetector(pi, store, projectStore, config, dbManager, projectName);
