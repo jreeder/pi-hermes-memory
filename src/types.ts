@@ -70,6 +70,12 @@ export interface MemoryConfig {
   nudgeToolCalls: number;
   /** Maximum time in milliseconds for auto-consolidation to complete. Default: 60000 */
   consolidationTimeoutMs: number;
+  /**
+   * Model to use for background pi processes (review, flush, consolidation, correction).
+   * Passed as --model <value> to each `pi -p --no-session` call.
+   * When omitted, the pi CLI uses its own default model.
+   */
+  backgroundModel?: string;
 }
 
 export type MemoryCategory =
