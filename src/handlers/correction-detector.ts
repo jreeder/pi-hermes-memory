@@ -25,6 +25,7 @@ import {
 } from "../constants.js";
 import type { MemoryConfig } from "../types.js";
 import { getMessageText } from "../types.js";
+import { buildBackgroundPiArgs } from "./exec-helpers.js";
 
 /**
  * Extract the directive part from a correction message.
@@ -205,7 +206,7 @@ export function setupCorrectionDetector(
         recentParts.join("\n\n"),
       );
 
-      const result = await pi.exec("pi", ["-p", "--no-session", prompt.join("\n")], {
+      const result = await pi.exec("pi", buildBackgroundPiArgs(prompt.join("\n"), config.backgroundModel), {
         signal: ctx.signal,
         timeout: 30000,
       });

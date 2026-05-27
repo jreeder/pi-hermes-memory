@@ -9,6 +9,7 @@ import { MemoryStore } from "../store/memory-store.js";
 import { FLUSH_PROMPT } from "../constants.js";
 import type { MemoryConfig } from "../types.js";
 import { collectMessageParts } from "./message-parts.js";
+import { buildBackgroundPiArgs } from "./exec-helpers.js";
 
 export function setupSessionFlush(
   pi: ExtensionAPI,
@@ -42,7 +43,7 @@ export function setupSessionFlush(
     ].join("\n");
 
     try {
-      await pi.exec("pi", ["-p", "--no-session", flushMessage], {
+      await pi.exec("pi", buildBackgroundPiArgs(flushMessage, config.backgroundModel), {
         signal,
         timeout: timeoutMs,
       });
